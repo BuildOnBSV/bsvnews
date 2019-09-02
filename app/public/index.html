@@ -1,0 +1,159 @@
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/1.0.11/purify.js"></script>
+</head>
+
+
+<body>
+  <center>
+
+    <table id="hnmain" border="0" cellpadding="0" cellspacing="0" width="85%" bgcolor="#f6f6ef">
+      <tbody>
+        <tr>
+          <td bgcolor="#E3B747">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="padding:2px">
+              <tbody>
+                <tr>
+                  <td style="width:18px;padding-right:4px"><a href="https://news.ycombinator.com"><img src="bsvlogo.svg" width="18" height="18" style="border:1px white solid;border-radius:50%"></a></td>
+                  <td style="line-height:12pt; height:10px;"><span class="pagetop"><b class="hnname"><a href="news">BSV News</a></b>
+                      <a href="newswelcome.html">welcome</a> | <a href="newest">new</a> | <a href="newcomments">comments</a> | <a href="ask">ask</a> | <a href="show">show</a> | <a href="jobs">jobs</a> | <a href="submit">submit</a> </span></td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+        <tr id="pagespace" title="" style="height:10px"></tr>
+        <tr>
+          <td>
+            <table border="0" cellpadding="0" cellspacing="0" class="itemlist">
+              <tbody id="tcontent">
+              </tbody>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </center>
+</body>
+
+
+
+
+<script type="text/javascript">
+  $(document).ready(function() {
+
+    function getParameterByName(name) {
+      var regexS = "[\\?&]" + name + "=([^&#]*)",
+        regex = new RegExp(regexS),
+        results = regex.exec(window.location.search);
+      if (results == null) {
+        return "";
+      } else {
+        return decodeURIComponent(results[1].replace(/\+/g, " "));
+      }
+    }
+
+    function invalidFormatting(info, outputs) {
+      console.log(info);
+      outputs.push({
+        "s3": "invalid formatting",
+        "s4": '{"t": "invalid formatting", "u":"invalid formatting", "b":"invalid formatting", "c":"invalid formatting"}',
+        "s5": "invalid formatting",
+        "tx": "invalid formatting"
+      })
+    }
+
+    function timeSince(timeStamp) {
+      timeStamp = parseInt(timeStamp);
+      var olddate = new Date(timeStamp);
+      console.log(olddate);
+      var now = new Date(),
+        secondsPast = (now.getTime() - olddate.getTime()) / 1000;
+
+      if (secondsPast < 60) {
+        return parseInt(secondsPast) + 's ago';
+      }
+      if (secondsPast < 3600) {
+        return parseInt(secondsPast / 60) + 'm ago';
+      }
+      if (secondsPast <= 86400) {
+        return parseInt(secondsPast / 3600) + 'h ago';
+      }
+      if (secondsPast > 86400) {
+        day = olddate.getDate();
+        month = olddate.toDateString().match(/ [a-zA-Z]*/)[0].replace(" ", "");
+        year = olddate.getFullYear() == now.getFullYear() ? "" : " " + olddate.getFullYear();
+        return day + " " + month + year;
+      }
+    }
+
+    var index = DOMPurify.sanitize(getParameterByName('index'));
+    if (!(parseInt(index) > 0)) {
+      index = '0'
+    }
+    $.post("/db/planaria/count/" + index, function(data) {
+      console.log(data);
+      var outputs = []
+
+      data.forEach(function(item) {
+        var info = item.out[0];
+        info.tx = item._id;
+        if (info.hasOwnProperty('s3') && info.hasOwnProperty('s4') && info.hasOwnProperty('s5') && info.hasOwnProperty('tx')) {
+          try {
+            content = JSON.parse(info.s4);
+            if (content.hasOwnProperty('t') && content.hasOwnProperty('u') && content.hasOwnProperty('b')) {
+              outputs.push(info);
+            } else {
+              invalidFormatting(info, outputs);
+              console.log(1);
+            }
+          } catch {
+            invalidFormatting(info, outputs);
+            console.log(2);
+          }
+        } else {
+          invalidFormatting(info, outputs);
+          console.log(3);
+        }
+
+      })
+      console.log(outputs);
+      rank = parseInt(index) * 30;
+      outputs.forEach(function(element) {
+
+        rank = rank + 1;
+        contents = JSON.parse(DOMPurify.sanitize(element.s4));
+
+        document.getElementById("tcontent").innerHTML = document.getElementById("tcontent").innerHTML +
+          ` <tr class="athing" id="rank${rank}">
+             <td align = "right" valign = "top" class = "title"> <span class = "rank">${rank}.</span></td>
+             <td valign = "top" class = "votelinks">
+                <center>
+                  <a id = "${DOMPurify.sanitize(element.tx)}" onclick = "upvote('#'+${DOMPurify.sanitize(element.tx)})">
+                    <div class = "votearrow" title = "upvote"> </div>
+                  </a>
+                 </center>
+             </td>
+             <td class = "title"> <a href='${DOMPurify.sanitize(contents.u)}' class = "storylink" > ${DOMPurify.sanitize(contents.t)} </a>
+                <span class="sitebit comhead"> (<a href="${DOMPurify.sanitize(element.s5)}"><span class="sitestr">${DOMPurify.sanitize(contents.u)}</span > </a>)</span>
+             </td>
+            </tr>
+            <tr>
+              <td colspan="2"></td>
+              <td class="subtext">
+                <span class="score" id="score_20676904">413 points</span> |
+                <span class="age"><a>${timeSince(element.s5)}</a></span> <span id="unv_20676904"></span> |
+                <a href="/comments?tx=${DOMPurify.sanitize(element.tx)}">235&nbsp;comments</a>
+              </td>
+            </tr>
+            <tr class="spacer" style="height:5px"></tr>`;
+      })
+    });
+  })
+</script>
+
+
+
+</html>
