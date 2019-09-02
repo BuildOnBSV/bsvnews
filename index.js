@@ -44,10 +44,11 @@ planaria.start({
   onstart: (e) => {
     return new Promise(async (resolve, reject) => {
       if (!e.tape.self.start) {
-        await planaria.exec("docker", ["pull", "mongo:4.0.4"])
-        await planaria.exec("docker", ["run", "-d", "-p", "27017-27019:27017-27019", "--name", "mongo", "-v", process.cwd() + "/db:/data/db", "mongo:4.0.4"])
-        await planaria.exec("docker", ["build", "-t", "app", "app/."])
-        await planaria.exec("docker", ["run", "-d", "-p", "4000:4000", "--link", "mongo:mongo","--name", "app", "app"])
+        await planaria.exec("sudo", ["docker","pull", "mongo:4.0.4"])
+        //await planaria.exec("sudo", ["docker","run", "-d", "-p", "27017-27019:27017-27019", "--name", "mongo", "-v", process.cwd() + "/db:/data/db", "mongo:4.0.4"])
+        await planaria.exec("sudo", ["docker","run", "-d", "-p", "27017-27019:27017-27019", "--name", "mongo", "mongo:4.0.4"])
+        await planaria.exec("sudo", ["docker","build", "-t", "app", "app/."])
+        await planaria.exec("sudo", ["docker","run", "-d", "-p", "4000:4000", "--link", "mongo:mongo","--name", "app", "app"])
       }
       connect(() => {
         if (e.tape.self.start) db.collection("c").deleteMany({
