@@ -188,6 +188,7 @@ Resources:
           Type: KEY_AND_VALUE
           Value: !Ref 'AWS::StackName'
       ServiceRoleArn: !Sub '${CodeDeployIAMRole.Arn}'
+      DeploymentConfigName: CodeDeployDefault.AllAtOnce
   SecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:

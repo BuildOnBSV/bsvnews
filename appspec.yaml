@@ -1,8 +1,8 @@
 version: 0.0
 os: linux
 files:
-  - source: src
-    destination: /home/ec2-user
+  - source: /src
+    destination: /home/ec2-user/
 hooks:
   AfterInstall:
     - location: scripts/start_server.sh

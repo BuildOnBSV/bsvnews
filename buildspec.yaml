@@ -1,0 +1,19 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+       - echo hi
+  pre_build:
+    commands:
+       - echo bye
+  build:
+    commands:
+       - echo hola
+  post_build:
+    commands:
+       - echo adios
+artifacts:
+  files:
+     - codedeploy/*
+  discard-paths: yes
