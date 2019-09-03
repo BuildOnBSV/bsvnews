@@ -5,6 +5,6 @@ sudo yum install -y gcc-c++ make git docker nodejs
 sudo service docker start
 echo 'Woot1!' > /home/ec2-user/user-script-output1.txt
 cd /home/ec2-user
-node index
-node server
+node index &>/dev/null &
+node server &>/dev/null &
 echo 'Woot2!' > /home/ec2-user/user-script-output2.txt
