@@ -39,9 +39,9 @@ Mappings:
     eu-central-1:
       AMI: ami-0044b96f
     us-east-1:
-      AMI: ami-c481fad3
+      AMI: ami-035b3c7efe6d061d5
     us-east-2:
-      AMI: ami-71ca9114
+      AMI: ami-02f706d959cedf892
     us-west-1:
       AMI: ami-de347abe
     us-west-2:
@@ -253,15 +253,14 @@ Resources:
 
           #!/bin/bash -x
 
-          yum update -y && yum install -y ruby wget && wget
+          sudo yum update
+          sudo yum install ruby
+          sudo yum install wget
+          cd /home/ec2-user
+          wget https://aws-codedeploy-us-east-1.s3.us-east-1.amazonaws.com/latest/install
+          chmod +x ./install
+          sudo ./install auto
 
-          https://aws-codedeploy-us-east-1.s3.amazonaws.com/latest/install &&
-
-          chmod +x ./install && ./install auto && service codedeploy-agent start
-
-          /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack
-
-          ${AWS::StackName} --resource EC2Instance
       SubnetId: !Ref Subnet
       Tags:
         - Key: DeploymentGroup
