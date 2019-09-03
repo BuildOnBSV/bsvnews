@@ -267,6 +267,16 @@ Resources:
           Value: !Ref 'AWS::StackName'
         - Key: Name
           Value: !Ref 'AWS::StackName'
+  DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: 'bsvnews.io.'
+      Comment: DNS name for my instance.
+      Name: 'www.bsvnews.io.'
+      Type: CNAME
+      TTL: '900'
+      ResourceRecords:
+      - !GetAtt EC2Instance.PublicIp
 Outputs:
   URL:
     Description: The URL pointing to the static website.
