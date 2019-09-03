@@ -1,4 +1,4 @@
-#!/bin/bash -xe
+#!/bin/bash -x
 echo 'Woot!' > /home/ec2-user/user-script-output0.txt
 curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
 sudo yum install -y gcc-c++ make git docker nodejs
