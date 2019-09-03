@@ -1,0 +1,14 @@
+version: 0.0
+os: linux
+files:
+  - source: /src
+    destination: /home/ec2-user
+hooks:
+  BeforeInstall:
+    - location: scripts/start_server
+      timeout: 300
+      runas: root
+  ApplicationStop:
+    - location: scripts/stop_server
+      timeout: 300
+      runas: root
