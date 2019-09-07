@@ -281,3 +281,10 @@ Outputs:
   URL:
     Description: The URL pointing to the static website.
     Value: !Sub 'http://${EC2Instance.PublicDnsName}'
+  SourceshareIp:
+    Description: The IP to match my DNS
+    Value: !GetAtt EC2Instance.PublicIp
+  PipelineArn:
+    Description: The ARN of the codepipeline
+    #Value: !GetAtt CodePipeline.Arn
+    Value:  !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${CodePipeline}"
