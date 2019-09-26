@@ -13,13 +13,18 @@ Parameters:
   VPC:
     Description: The VPC Id to launch the EC2 instance in.
     Type: 'AWS::EC2::VPC::Id'
-  Subnet:
+  CertificateArn:
+    Description: ARN of an ACM certificate for the HTTPS listener
+    Type: String
+  Subnet1:
     Description: The Subnet Id to launch the EC2 instance in.
     Type: 'AWS::EC2::Subnet::Id'
-  KeyName:
-    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
-    Type: 'AWS::EC2::KeyPair::KeyName'
-    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  Subnet2:
+    Description: The Subnet Id to launch the EC2 instance in.
+    Type: 'AWS::EC2::Subnet::Id'
+  HostedZoneId:
+    Description: The hosted zone Id for the desired domain.
+    Type: 'AWS::Route53::HostedZone::Id'
 Mappings:
   RegionMap:
     ap-south-1:
@@ -126,7 +131,7 @@ Resources:
                 Effect: Allow
   CodePipeline:
     DependsOn:
-      - EC2Instance
+      - myASGroup
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
       ArtifactStore:
@@ -211,8 +216,19 @@ Resources:
           ToPort: 3000
           IpProtocol: tcp
           CidrIp: 0.0.0.0/0
-        - FromPort: 22
-          ToPort: 22
+
+  ELBSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: ELB Security Group
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - FromPort: 80
+          ToPort: 80
+          IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+        - FromPort: 443
+          ToPort: 443
           IpProtocol: tcp
           CidrIp: 0.0.0.0/0
   EC2InstanceProfile:
@@ -236,55 +252,200 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy'
-  EC2Instance:
-    Type: 'AWS::EC2::Instance'
+  myLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      KeyName: !Ref KeyName
-      IamInstanceProfile: !Ref EC2InstanceProfile
       ImageId: !FindInMap
         - RegionMap
         - !Ref 'AWS::Region'
         - AMI
       InstanceType: t2.micro
-      SecurityGroupIds:
-        - !Ref SecurityGroup
+      IamInstanceProfile: !Ref EC2InstanceProfile
       UserData: !Base64
         'Fn::Sub': |
 
           #!/bin/bash -x
 
           sudo yum update
-          sudo yum install ruby
-          sudo yum install wget
+          sudo yum install ruby -y
+          sudo yum install wget -y
           cd /home/ec2-user
           wget https://aws-codedeploy-us-east-1.s3.us-east-1.amazonaws.com/latest/install
-          chmod +x ./install
+          sudo chmod +x ./install
           sudo ./install auto
-
-      SubnetId: !Ref Subnet
+      SecurityGroups:
+        - !Ref SecurityGroup
+  myASGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref myLaunchConfig
+      VPCZoneIdentifier:
+        - !Ref Subnet1
+        - !Ref Subnet2
+      MinSize: "2"
+      MaxSize: "4"
+      TargetGroupARNs:
+      - !Ref TargetGroup
+      # LoadBalancerNames:
+      #   - Ref: "myLoadBalancer"
+      MetricsCollection:
+        -
+          Granularity: "1Minute"
+          Metrics:
+            - "GroupMinSize"
+            - "GroupMaxSize"
       Tags:
         - Key: DeploymentGroup
           Value: !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
         - Key: Name
           Value: !Ref 'AWS::StackName'
-  DnsRecord:
-    Type: AWS::Route53::RecordSet
+          PropagateAtLaunch: 'true'
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HostedZoneName: 'bsvnews.io.'
-      Comment: DNS name for my instance.
-      Name: 'www.bsvnews.io.'
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-      - !GetAtt EC2Instance.PublicIp
+      VpcId: !Ref VPC
+      TargetType: instance
+      Port: 80
+      Protocol: HTTP
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: LoadBalancer
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref ELBSecurityGroup
+      Subnets: [!Ref Subnet1, !Ref Subnet2]
+
+  LbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - LoadBalancer
+    Properties:
+      DefaultActions:
+        - RedirectConfig:
+            Host: "#{host}"
+            Path: "/#{path}"
+            Port: 443
+            Protocol: "HTTPS"
+            Query: "#{query}"
+            StatusCode: HTTP_301
+          Type: redirect
+      LoadBalancerArn: !Ref 'LoadBalancer'
+      Port: 80
+      Protocol: HTTP
+
+  HTTPSlistener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref CertificateArn
+      SslPolicy: ELBSecurityPolicy-TLS-1-2-2017-01
+
+  CheckerRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS:
+                - "arn:aws:iam::713269593054:role/lambda_basic_execution"
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+
+  S3BucketRedirect:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: www.bsvnews.io
+      AccessControl: PublicRead
+      Tags:
+        - Key: Client
+          Value: Example
+      WebsiteConfiguration:
+        RedirectAllRequestsTo:
+          HostName: bsvnews.io
+          Protocol: https
+
+  SourceCheckerPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "SourceCheckerPolicy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "CodedeployStatement"
+            Effect: "Allow"
+            Action:
+              - "codedeploy:BatchGetDeploymentInstances"
+              - "codedeploy:GetDeployment"
+              - "codedeploy:GetDeploymentGroup"
+              - "codedeploy:ListDeploymentInstances"
+            Resource: !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${Application}/*"
+
+          - Sid: "CodePipelineStatement"
+            Effect: "Allow"
+            Action:
+              - "codepipeline:GetPipeline"
+              - "codepipeline:GetPipelineExecution"
+              - "codepipeline:GetPipelineState"
+            Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${CodePipeline}"
+
+          - Sid: "Route53Statement"
+            Effect: "Allow"
+            Action:
+              - "route53:GetChange"
+              - "route53:GetHealthCheck"
+              - "route53:GetHealthCheckLastFailureReason"
+              - "route53:GetHealthCheckStatus"
+              - "route53:GetHostedZone"
+              - "route53:ListResourceRecordSets"
+            Resource: !Sub "arn:aws:route53:::hostedzone/${HostedZoneId}"
+
+          - Sid: "S3Statement"
+            Effect: "Allow"
+            Action:
+              - "s3:GetBucketWebsite"
+            Resource: "arn:aws:s3:::www.bsvnews.io"
+
+          - Sid: "ELBStatement"
+            Effect: "Allow"
+            Action:
+              - "elasticloadbalancing:DescribeListeners"
+              - "elasticloadbalancing:DescribeTargetHealth"
+              - "elasticloadbalancing:DescribeLoadBalancers"
+            Resource: "*"
+
+          - Sid: "ASGStatement"
+            Effect: "Allow"
+            Action:
+              - "autoscaling:DescribeAutoScalingInstances"
+              - "autoscaling:DescribeLaunchConfigurations"
+            Resource: "*"
+      Roles:
+        - Ref: "CheckerRole"
+
 Outputs:
-  URL:
-    Description: The URL pointing to the static website.
-    Value: !Sub 'http://${EC2Instance.PublicDnsName}'
-  SourceshareIp:
-    Description: The IP to match my DNS
-    Value: !GetAtt EC2Instance.PublicIp
-  PipelineArn:
-    Description: The ARN of the codepipeline
-    #Value: !GetAtt CodePipeline.Arn
-    Value:  !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${CodePipeline}"
+  CodePipelineArn:
+    Description: The name of the codepipeline
+    Value:  !Ref CodePipeline
+  HostedZone:
+    Description: HostedZoneId
+    Value: !Ref HostedZoneId
+  LoadbalancerArn:
+    Description: Loadbalancer ARN
+    Value: !Ref LoadBalancer
+  RoleArn:
+    Description: Role ARN
+    Value: !Sub "arn:aws:iam::${AWS::AccountId}:role/${CheckerRole}"
