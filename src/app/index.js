@@ -14,7 +14,7 @@ app.get('/submit', function(req, res) {
   res.sendFile(__dirname + '/public/submit.html');
 });
 app.get('/comments', function(req, res) {
-  res.sendFile(__dirname + '/public/comments1.html');
+  res.sendFile(__dirname + '/public/comments.html');
 });
 //app.get('/comments', (req, res) => res.sendFile(__dirname, 'comments.html'));
 
