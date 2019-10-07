@@ -8,5 +8,7 @@ sudo docker rm mongo
 sudo docker stop app
 sudo docker rm app
 sudo rm tape.txt
-sudo pm2 start index.js &>/dev/null &
-sudo pm2 start server.js &>/dev/null &
+#sudo pm2 start index.js &>/dev/null &
+#sudo pm2 start server.js &>/dev/null &
+sudo pm2 start index.js 
+sudo pm2 start server.js
