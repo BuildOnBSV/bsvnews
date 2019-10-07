@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Continuous Delivery pipeline for static website
+Description: Continuous Delivery pipeline for EC2 Autoscaling Group
 Parameters:
   GitHubOwner:
     Description: The owner of the GitHub repository.
@@ -28,29 +28,33 @@ Parameters:
 Mappings:
   RegionMap:
     ap-south-1:
-      AMI: ami-cacbbea5
-    eu-west-1:
-      AMI: ami-d41d58a7
+      AMI: ami-02913db388613c3e1
     ap-northeast-2:
-      AMI: ami-a04297ce
+      AMI: ami-0e1e385b0a934254a
     ap-northeast-1:
-      AMI: ami-1a15c77b
-    sa-east-1:
-      AMI: ami-b777e4db
+      AMI: ami-0ab3e16f9c414dee7
     ap-southeast-1:
-      AMI: ami-7243e611
+      AMI: ami-05c859630889c79c8
     ap-southeast-2:
-      AMI: ami-55d4e436
+      AMI: ami-07cc15c3ba6f8e287
+    ca-central-1:
+      AMI: ami-04070f04f450607dc
     eu-central-1:
-      AMI: ami-0044b96f
+      AMI: ami-010fae13a16763bb4
+    eu-west-1:
+      AMI: ami-028188d9b49b32a80
+    eu-west-2:
+      AMI: ami-04de2b60dd25fbb2e
+    sa-east-1:
+      AMI: ami-0e2c2c29d8017dd99
     us-east-1:
       AMI: ami-035b3c7efe6d061d5
     us-east-2:
       AMI: ami-02f706d959cedf892
     us-west-1:
-      AMI: ami-de347abe
+      AMI: ami-0bce08e823ed38bdd
     us-west-2:
-      AMI: ami-b04e92d0
+      AMI: ami-03920bf5f903e90d4
 Resources:
   ArtifactStore:
     Type: 'AWS::S3::Bucket'
@@ -148,7 +152,7 @@ Resources:
                 Version: 1
                 Provider: GitHub
               OutputArtifacts:
-                - Name: staticwebsite
+                - Name: asgWebsite
               Configuration:
                 Owner: !Ref GitHubOwner
                 Repo: !Ref GitHubRepo
@@ -163,7 +167,7 @@ Resources:
                 Version: 1
                 Provider: CodeDeploy
               InputArtifacts:
-                - Name: staticwebsite
+                - Name: asgWebsite
               Configuration:
                 ApplicationName: !Ref Application
                 DeploymentGroupName: !Ref DeploymentGroup
@@ -197,25 +201,25 @@ Resources:
   SecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: static website
+      GroupDescription: SG for EC2 ASG
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - FromPort: 80
           ToPort: 80
           IpProtocol: tcp
           CidrIp: 0.0.0.0/0
-        - FromPort: 4000
-          ToPort: 4000
-          IpProtocol: tcp
-          CidrIp: 0.0.0.0/0
-        - FromPort: 27017
-          ToPort: 27019
-          IpProtocol: tcp
-          CidrIp: 0.0.0.0/0
-        - FromPort: 3000
-          ToPort: 3000
-          IpProtocol: tcp
-          CidrIp: 0.0.0.0/0
+        # - FromPort: 4000
+        #   ToPort: 4000
+        #   IpProtocol: tcp
+        #   CidrIp: 0.0.0.0/0
+        # - FromPort: 27017
+        #   ToPort: 27019
+        #   IpProtocol: tcp
+        #   CidrIp: 0.0.0.0/0
+        # - FromPort: 3000
+        #   ToPort: 3000
+        #   IpProtocol: tcp
+        #   CidrIp: 0.0.0.0/0
 
   ELBSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
