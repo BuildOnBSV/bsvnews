@@ -18,8 +18,8 @@
               <tbody>
                 <tr>
                   <td style="width:18px;padding-right:4px"><a href="https://news.ycombinator.com"><img src="bsvlogo.svg" width="18" height="18" style="border:1px white solid;border-radius:50%"></a></td>
-                  <td style="line-height:12pt; height:10px;"><span class="pagetop"><b class="hnname"><a href="news">BSV News1</a></b>
-                      <a href="newswelcome.html">welcome</a> | <a href="newest">new</a> | <a href="newcomments">comments</a> | <a href="ask">ask</a> | <a href="show">show</a> | <a href="jobs">jobs</a> | <a href="submit">submit</a> </span></td>
+                  <td style="line-height:12pt; height:10px;"><span class="pagetop"><b class="hnname"><a href="news">BSV News</a></b>
+                      <a>welcome</a> | <a href="https://bsvnews.io">new</a> | <a href="jobs">jobs</a> | <a href="submit">submit</a> </span></td>
                 </tr>
               </tbody>
             </table>
@@ -33,6 +33,23 @@
               </tbody>
           </td>
         </tr>
+      </tbody>
+    </table>
+    <table id="hnfoot" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#f6f6ef">
+      <tr id="footspace" title="" style="height:10px"></tr>
+      <tr>
+        <td>
+          <table width="100%" cellspacing="0" cellpadding="1">
+            <tbody>
+              <tr>
+                <td bgcolor="#E3B747"></td>
+              </tr>
+            </tbody>
+          </table><br>
+          <center><span class="yclinks"><a href="mailto:akondelin@gmail.com">Contact</a></span><br><br>
+              </center>
+        </td>
+      </tr>
       </tbody>
     </table>
   </center>
@@ -98,7 +115,7 @@
       var outputs = []
 
       data.forEach(function(item) {
-        var info = item.out[0];
+        var info = item.out;
         info.tx = item._id;
         if (info.hasOwnProperty('s3') && info.hasOwnProperty('s4') && info.hasOwnProperty('s5') && info.hasOwnProperty('tx')) {
           try {
@@ -145,11 +162,14 @@
               <td class="subtext">
                 <span class="score" id="score_20676904">413 points</span> |
                 <span class="age"><a>${timeSince(element.s5)}</a></span> <span id="unv_20676904"></span> |
-                <a href="/comments?tx=${DOMPurify.sanitize(element.tx)}">235&nbsp;comments</a>
+                <a href="/comments?tx=${DOMPurify.sanitize(element.tx)}">comments</a>
               </td>
             </tr>
             <tr class="spacer" style="height:5px"></tr>`;
       })
+    document.getElementById("tcontent").innerHTML = document.getElementById("tcontent").innerHTML +
+      `<tr class="spacer" style="height:15px"></tr>
+      <tr><td colspan="2"></td><td class="title"><a href="?index=${parseInt(index) + 1}" class="morelink" rel="next">More</a></td></tr>`
     });
   })
 </script>

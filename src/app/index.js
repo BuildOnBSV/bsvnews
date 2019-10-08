@@ -26,9 +26,13 @@ app.post('/db/:db/count/:count', function(req, res) {
       var count = req.params.count;
       var limit = 30;
       var skip = parseInt(count) * limit;
+      var now = Date.now();
+      console.log(now);
 
       dbo.collection('a').aggregate([{
-
+          $unwind: "$out"
+        },
+        {
           $group: {
             '_id': "$tx.h",
             'blk': {
@@ -44,9 +48,22 @@ app.post('/db/:db/count/:count', function(req, res) {
         },
         {
           $sort: {
-            'blk.i': -1
+            'out.s5': -1
           }
 
+        },
+        {
+          $match: {
+            $and: [{
+              'out.s3': "entry"
+            }, {
+              "$expr": {
+                "$lt": [{
+                  "$toLong": "$out.s5"
+                }, now]
+              }
+            }]
+          }
         },
         {
           "$limit": skip + limit
@@ -104,9 +121,17 @@ app.post('/tx/:tx/count/:count', function(req, res) {
         {
           $match: {
             $or: [{
-              '_id': tx
+              $and: [{
+                '_id': tx
+              }, {
+                'out.s3': "entry"
+              }]
             }, {
-              'out.s6': tx
+              $and: [{
+                'out.s6': tx
+              }, {
+                'out.s3': "comment"
+              }]
             }]
           }
         },
