@@ -47,7 +47,7 @@
             </tbody>
           </table><br>
           <center><span class="yclinks"><a href="mailto:akondelin@gmail.com">Contact</a></span><br><br>
-              </center>
+          </center>
         </td>
       </tr>
       </tbody>
@@ -70,6 +70,7 @@
         return decodeURIComponent(results[1].replace(/\+/g, " "));
       }
     }
+
     function invalidFormatting(info, outputs) {
       console.log(info);
       outputs.push({
@@ -79,6 +80,7 @@
         "tx": "invalid formatting"
       })
     }
+
     function timeSince(timeStamp) {
       timeStamp = parseInt(timeStamp);
       var olddate = new Date(timeStamp);
@@ -111,6 +113,11 @@
       data.forEach(function(item) {
         var info = item.out;
         info.tx = item._id;
+        if (item.hasOwnProperty('upvotes')) {
+          info.upvotes = String(item.upvotes['count']);
+        } else {
+          info.upvotes = "0";
+        }
         if (info.hasOwnProperty('s3') && info.hasOwnProperty('s4') && info.hasOwnProperty('s5') && info.hasOwnProperty('tx')) {
           try {
             content = JSON.parse(info.s4);
@@ -137,34 +144,84 @@
         document.getElementById("tcontent").innerHTML = document.getElementById("tcontent").innerHTML +
           ` <tr class="athing" id="rank${rank}">
              <td align = "right" valign = "top" class = "title"> <span class = "rank">${rank}.</span></td>
-             <td valign = "top" class = "votelinks">
+             <td valign="top" class="votelinks">
                 <center>
-                  <a id = "${DOMPurify.sanitize(element.tx)}" onclick = "upvote('#'+${DOMPurify.sanitize(element.tx)})">
-                    <div class = "votearrow" title = "upvote"> </div>
+                  <a>
+                    <div class = "votearrow" data-tx="${DOMPurify.sanitize(element.tx)}" data-id="pay${rank}" data-b="${DOMPurify.sanitize(contents.b)}"> </div>
                   </a>
                  </center>
              </td>
-             <td class = "title"> <a href='${DOMPurify.sanitize(contents.u)}' class = "storylink" > ${DOMPurify.sanitize(contents.t)} </a>
-                <span class="sitebit comhead"> (<a href="${DOMPurify.sanitize(element.s5)}"><span class="sitestr">${DOMPurify.sanitize(contents.u)}</span > </a>)</span>
-             </td>
-            </tr>
-            <tr>
-              <td colspan="2"></td>
-              <td class="subtext">
-                <span class="score" id="score_20676904">413 points</span> |
-                <span class="age"><a>${timeSince(element.s5)}</a></span> <span id="unv_20676904"></span> |
-                <a href="/comments?tx=${DOMPurify.sanitize(element.tx)}">comments</a>
+             <td class = "title" style="vertical-align:top"> <a href='${DOMPurify.sanitize(contents.u)}' class = "storylink" > ${DOMPurify.sanitize(contents.t)} </a>
+                <span class="sitebit comhead"> (<a href="${DOMPurify.sanitize(contents.u)}"><span class="sitestr">${DOMPurify.sanitize(contents.u)}</span > </a>)</span></br>
+                <span class="subtext">
+                  <span class="score" id="score_20676904">${DOMPurify.sanitize(element.upvotes)} points</span> |
+                  <span class="age"><a>${timeSince(element.s5)}</a></span> <span id="unv_20676904"></span> |
+                  <a href="/comments?tx=${DOMPurify.sanitize(element.tx)}">comments</a>
+                </span>
               </td>
+              <td id="pay${rank}"></td>
             </tr>
             <tr class="spacer" style="height:5px"></tr>`;
       })
-    document.getElementById("tcontent").innerHTML = document.getElementById("tcontent").innerHTML +
-      `<tr class="spacer" style="height:15px"></tr>
+      document.getElementById("tcontent").innerHTML = document.getElementById("tcontent").innerHTML +
+        `<tr class="spacer" style="height:15px"></tr>
       <tr><td colspan="2"></td><td class="title"><a href="?index=${parseInt(index) + 1}" class="morelink" rel="next">More</a></td></tr>`
     });
   })
 </script>
 
+<script src="https://www.moneybutton.com/moneybutton.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+  $(document).ready(function() {
+    function toHex(str) {
+      try {
+        hex = unescape(encodeURIComponent(str))
+          .split('').map(function(v) {
+            return v.charCodeAt(0).toString(16)
+          }).join('')
+      } catch (e) {
+        hex = str
+        console.log('invalid text input: ' + str)
+      }
+      return hex
+    }
 
+    $(document).on('click', "div.votearrow", function() {
+      // var tx = $(this).val();
+      var tx = $(this).attr("data-tx");
+      var id = $(this).attr("data-id");
+      var benefactor = $(this).attr("data-b");
+      var date = new Date();
+      var timestamp = date.getTime();
+      var hex = toHex("upvote") + ' ' + toHex("1") + ' ' + toHex(timestamp) + ' ' + toHex(tx);
+      $('#'+id).show();
+
+      console.log(hex);
+      let div = document.getElementById(id);
+      moneyButton.render(div, {
+        label: 'Submit!',
+        outputs: [{
+            to: benefactor,
+            amount: '0.05',
+            currency: 'USD'
+          },
+          {
+            script: 'OP_FALSE OP_RETURN 6273766e657773696f31 ' + hex,
+            amount: '0',
+            currency: 'USD'
+          }
+        ],
+        onPayment: console.log
+      })
+      $('html').click(function(e) {
+        //if clicked element is not your element and parents aren't your div
+        if (e.target.id != '#'+id && $(e.target).parents('#'+id).length == 0) {
+          $('#'+id).hide();
+        }
+      });
+    })
+  })
+</script>
 
 </html>

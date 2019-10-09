@@ -38,15 +38,15 @@
                 <tbody>
                   <tr>
                     <td>title</td>
-                    <td><input type="text" class="tohex" id="title" value="" size="50" oninput="tlen(this)" onfocus="tlen(this)"><span style="margin-left:10px"></span></td>
+                    <td><input type="text" class="tohex" id="title" value="" size="55" oninput="tlen(this)" onfocus="tlen(this)"><span style="margin-left:10px"></span></td>
                   </tr>
                   <tr>
                     <td>url</td>
-                    <td><input type="text" class="tohex" id="url" value="" size="50"></td>
+                    <td><input type="text" class="tohex" id="url" value="" size="55"></td>
                   </tr>
                   <tr>
                     <td></td>
-                    <td><input type="text" class="tohex" id="benefits" value="" size="50" placeholder="BSV address or moneybutton id"></td>
+                    <td><input type="text" class="tohex" id="benefits" value="" size="55" placeholder="BSV address or moneybutton id (to receive dividends)"></td>
                   </tr>
                   <tr>
                     <td></td>
@@ -70,7 +70,7 @@
                   <tr>
                     <td></td>
                     <td>
-                      For developers: you can also submit by manually entering the required OP_RETURN values into a Bitcoin SV transaction.
+                      Once you fill out the fields, the submit button will appear.
                   </tr>
                 </tbody>
               </table>
@@ -132,7 +132,7 @@
             currency: 'USD'
           },
           {
-            script: 'OP_FALSE OP_RETURN 6273766e657773696f31 ' + hex,
+            script: 'OP_FALSE OP_RETURN 6273766e657773696f ' + hex,
             amount: '0',
             currency: 'USD'
           }

@@ -1,0 +1,8 @@
+docker stop mongo
+docker rm -f mongo
+docker stop app
+docker rm -f app
+rm tape.txt
+pm2 delete all
+pm2 start index.js
+pm2 start server.js

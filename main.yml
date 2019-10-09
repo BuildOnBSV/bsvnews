@@ -186,8 +186,10 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole'
+
   Application:
     Type: 'AWS::CodeDeploy::Application'
+
   DeploymentGroup:
     Type: 'AWS::CodeDeploy::DeploymentGroup'
     Properties:
@@ -198,6 +200,7 @@ Resources:
           Value: !Ref 'AWS::StackName'
       ServiceRoleArn: !Sub '${CodeDeployIAMRole.Arn}'
       DeploymentConfigName: CodeDeployDefault.AllAtOnce
+
   SecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -208,18 +211,6 @@ Resources:
           ToPort: 80
           IpProtocol: tcp
           CidrIp: 0.0.0.0/0
-        # - FromPort: 4000
-        #   ToPort: 4000
-        #   IpProtocol: tcp
-        #   CidrIp: 0.0.0.0/0
-        # - FromPort: 27017
-        #   ToPort: 27019
-        #   IpProtocol: tcp
-        #   CidrIp: 0.0.0.0/0
-        # - FromPort: 3000
-        #   ToPort: 3000
-        #   IpProtocol: tcp
-        #   CidrIp: 0.0.0.0/0
 
   ELBSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -235,6 +226,7 @@ Resources:
           ToPort: 443
           IpProtocol: tcp
           CidrIp: 0.0.0.0/0
+
   EC2InstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'
     Properties:

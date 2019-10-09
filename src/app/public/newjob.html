@@ -1,0 +1,142 @@
+<html>
+
+<head>
+  <meta name="referrer" content="origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="shortcut icon" href="favicon.ico">
+  <title>Submit | Hacker News</title>
+</head>
+
+<body>
+  <center>
+    <table id="hnmain" border="0" cellpadding="0" cellspacing="0" width="85%" bgcolor="#f6f6ef">
+      <tbody>
+        <tr>
+          <td bgcolor="#E3B747">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="padding:2px">
+              <tbody>
+                <tr>
+                  <td style="width:18px;padding-right:4px"><a href="https://news.ycombinator.com"><img src="bsvlogo.svg" width="18" height="18" style="border:1px white solid;border-radius:50%"></a></td>
+                  <td style="line-height:12pt; height:10px;"><span class="pagetop"><b class="hnname"><a href="news">Add a Job</a></b>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+        <tr style="height:10px"></tr>
+        <tr>
+          <td>
+            <form method="post" action="/r"><input type="hidden" name="fnid" value="9zBuxmEflzL6EmObK2tn5S"><input type="hidden" name="fnop" value="submit-page">
+              <script type="text/javascript">
+                function tlen(el) {
+                  var n = el.value.length - 80;
+                  el.nextSibling.innerText = n > 0 ? n + ' too long' : '';
+                }
+              </script>
+              <table border="0">
+                <tbody>
+                  <tr>
+                    <td>title</td>
+                    <td><input type="text" class="tohex" id="title" value="" size="50" oninput="tlen(this)" onfocus="tlen(this)"><span style="margin-left:10px"></span></td>
+                  </tr>
+                  <tr>
+                    <td>url</td>
+                    <td><input type="text" class="tohex" id="url" value="" size="50"></td>
+                  </tr>
+                  <tr>
+                    <td>employer</td>
+                    <td><input type="text" class="tohex" id="employer" value="" size="50"></td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                  </tr>
+                  <!-- <tr>
+                    <td>text</td>
+                    <td><textarea id="content" class="tohex" rows="4" cols="49"></textarea></td>
+                  </tr> -->
+                  <tr>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td>
+                      <div id="button-here"></div>
+                    </td>
+                    <!-- <td><input type="submit" value="submit"></td> -->
+                  </tr>
+                  <tr style="height:20px"></tr>
+                  <tr>
+                    <td></td>
+                    <td>
+                      Once you fill out the fields, the submit button will appear.
+                  </tr>
+                </tbody>
+              </table>
+            </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </center>
+</body>
+
+<script src="https://www.moneybutton.com/moneybutton.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+  function toHex(str) {
+    try {
+      hex = unescape(encodeURIComponent(str))
+        .split('').map(function(v) {
+          return v.charCodeAt(0).toString(16)
+        }).join('')
+    } catch (e) {
+      hex = str
+      console.log('invalid text input: ' + str)
+    }
+    return hex
+  }
+
+  function cleanUrl(url) {
+    if (url.indexOf('https://') >= 0) {
+      return url;
+    } else if (url.indexOf('http://') >= 0) {
+      url = url.substring(7);
+    }
+    url = 'https://' + url;
+    return url;
+  }
+
+  $(".tohex").on("change keyup paste", function() {
+    if (($("#title").val() != '') && ($("#url").val() != '') && ($("#employer").val() != '')) {
+      var contents = $(this).val();
+      $(this).data('hex', toHex(contents));
+
+      var date = new Date();
+      var timestamp = date.getTime();
+      var url = $('#url').val();
+      var cleanedUrl = cleanUrl(url);
+      var inputs = `{"t":"${$('#title').val()}","u":"${cleanedUrl}","e":"${$('#employer').val()}","b":"4114"}`;
+      var hex = toHex('job') + ' ' + toHex(inputs) + ' ' + toHex(timestamp); // + ' ' + toHex(tx);
+      console.log(hex);
+      let div = document.getElementById('button-here')
+      moneyButton.render(div, {
+        label: 'Submit!',
+        outputs: [{
+            to: '4114',
+            amount: '1.00',
+            currency: 'USD'
+          },
+          {
+            script: 'OP_FALSE OP_RETURN 6273766e657773696f ' + hex,
+            amount: '0',
+            currency: 'USD'
+          }
+        ],
+        onPayment: console.log
+      })
+    }
+  })
+</script>
+  </html>
