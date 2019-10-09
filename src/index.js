@@ -24,7 +24,7 @@ planaria.start({
     "q": {
       //"find": { "in.e.a": "3FgFhED2mX2MgdZ5dhUrjn4V1Vu5RKNbp8" },
       "find": {
-        "out.s2": "bsvnewsio"
+        "out.s2": "bsvnews"
       },
       "project": {
         "out.s3": 1,
@@ -45,13 +45,12 @@ planaria.start({
     return new Promise(async (resolve, reject) => {
       if (!e.tape.self.start) {
         await planaria.exec("sudo", ["docker","pull", "mongo:4.0.4"])
-        //await planaria.exec("sudo", ["docker","run", "-d", "-p", "27017-27019:27017-27019", "--name", "mongo", "-v", process.cwd() + "/db:/data/db", "mongo:4.0.4"])
         await planaria.exec("sudo", ["docker","run", "--restart=always", "-d", "-p", "27017-27019:27017-27019", "--name", "mongo", "-v", process.cwd() + "/db:/data/db", "mongo:4.0.4"])
         await planaria.exec("sudo", ["docker","build", "-t", "app", "app/."])
         await planaria.exec("sudo", ["docker","run", "--restart=always","-d", "-p", "80:4000", "--link", "mongo:mongo","--name", "app", "app"])
       }
       connect(() => {
-        if (e.tape.self.start) db.collection("c").deleteMany({
+        if (e.tape.self.start) db.collection("a").deleteMany({
           "blk.i": {
             "$gt": e.tape.self.end
           }

@@ -118,8 +118,6 @@
       var url = $('#url').val();
       var cleanedUrl = cleanUrl(url);
 
-      //var tx = 'e35d48d0a7e7303dd065544b1dac22e419912a7744e3f013dcecc036f4c16d43;
-      // var inputs = `{"t":${$('#title').val()},"u":${$('#url').val()},"b":${$('#benefits').val()},"c":${$('#content').val()}}`;
       var inputs = `{"t":"${$('#title').val()}","u":"${cleanedUrl}","b":"${$('#benefits').val()}"}`;
       var hex = toHex('entry') + ' ' + toHex(inputs) + ' ' + toHex(timestamp); // + ' ' + toHex(tx);
       console.log(hex);
@@ -132,7 +130,7 @@
             currency: 'USD'
           },
           {
-            script: 'OP_FALSE OP_RETURN 6273766e657773696f ' + hex,
+            script: 'OP_FALSE OP_RETURN 6273766e657773 ' + hex,
             amount: '0',
             currency: 'USD'
           }
